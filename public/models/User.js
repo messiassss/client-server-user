@@ -12,7 +12,7 @@ class User {
         this._register = new Date();
     }
 
-    get id(){
+    get id() {
         return this._id;
     }
     get register() {
@@ -100,79 +100,66 @@ class User {
                     this[name] = new Date(json[name]);
                     break;
                 default:
-                    this[name] = json[name];
+                   if(name.substring(0,1) === "_") this[name] = json[name];
             }
 
         }
 
     }
 
-   static getUsersStorage(){
+    static getUsersStorage() {
 
-        let users = []
-        if(localStorage.getItem("users")){
-            users = JSON.parse(localStorage.getItem("users"));
-        }
-
-        return users;
-    }
-
-
-    getNewId(){
-
-        let usersID = localStorage.getItem("usersID");
-
-        if(!usersID > 0) usersID = 0;
-
-        usersID++;
-
-        localStorage.setItem("usersID",usersID);
-        
-        return usersID;
-    }
-
-    save(){
-        
-        let users = User.getUsersStorage();
-
-        if(this.id > 0){
-
-            users.map(u=>{
-                if(u._id == this.id){
-                    
-                    //u = this;
-                    Object.assign(u,this)
-                }
-
-                return u;
-            })
-
-        
-        }else{
-            this._id = this.getNewId();
-            
-            users.push(this)
-
-        }
-
-        localStorage.setItem("users",JSON.stringify(users));
-        
-    }
-
-
-
-    remove(){
-        let users = User.getUsersStorage();
-
-        users.forEach((userData, index) => {
+       return HttpRequest.get('users');
     
-            if(this._id == userData._id) {
-                
-                users.splice(index,1);
-            }   
-        });
+    }
 
-        localStorage.setItem("users",JSON.stringify(users));
 
+    toJSON() {
+        let json = {};
+        Object.keys(this).forEach(key => {
+
+            if (this[key] !== undefined) json[key] = this[key];
+
+        })
+
+        return json;
+    }
+
+
+    save() {
+
+        return new Promise((resolve, reject) => {
+
+            let promise;
+            
+            if (this.id) {
+            //toJSON() converte a json in stringfy json, I am using this method because some cases normal json becom Object[object]
+             promise = HttpRequest.put(`users/${this.id}`, this.toJSON())
+             
+
+            } else {
+
+            promise = HttpRequest.post(`users`, this.toJSON())
+          
+            }
+          
+            promise.then(data=>{
+                //load from json coverte a json from database in to a user object
+                this.loadFromJSON(data);
+
+                resolve(this);
+
+            }).catch(e=>{
+             
+                reject(e);
+
+            })
+        })
+    }
+
+
+
+    remove() {
+      return HttpRequest.delete(`users/${this.id}`)
     }
 }

@@ -21,7 +21,6 @@ class UserController {
             let btn = this.formUpdateEl.querySelector("[type=submit]")
             btn.disabled = true;
             let values = this.getValues(this.formUpdateEl);
-            debugger;
             let index = this.formUpdateEl.dataset.trIndex;
             let tr = this.tableEl.rows[index];
 
@@ -39,17 +38,16 @@ class UserController {
                     }
                     
                     let user = new User();
-
                     user.loadFromJSON(result)
-                    user.save();
-                    this.getTr(user,tr);
-                    
-                    btn.disabled = false;
-                    
-                    this.updateCount();
-                    this.formUpdateEl.reset();
-                    this.showPanelCreate();
+                    user.save().then(user=>{
+                        this.getTr(user,tr);
+                        btn.disabled = false;
+                        this.updateCount();
+                        this.formUpdateEl.reset();
+                        this.showPanelCreate();
+                    });
                 },
+
                 (e) => {
                     console.error(e)
                 }
@@ -67,10 +65,11 @@ class UserController {
 
                 let user = new User();
                 user.loadFromJSON(JSON.parse(tr.dataset.user));
-                user.remove();
+                user.remove().then(data=>{
+                    tr.remove();
+                    this.updateCount();
+                });
 
-                tr.remove();
-                this.updateCount();
             };
         })
 
@@ -119,13 +118,15 @@ class UserController {
             btn.disabled = true;
             this.getPhoto(this.formEl).then(
                 (content) => {
-                    values.photo = content;
-                    values.save();
-                    this.addLine(values);
-                    this.formEl.reset();
-                    btn.disabled = false;
                     
+                    values.photo = content;
+                    values.save().then(user=>{
+                        this.addLine(user);
+                        this.formEl.reset();
+                        btn.disabled = false;
+                    });                  
                 },
+
                 (e) => {
                     console.error(e)
                 }
@@ -210,22 +211,23 @@ class UserController {
 
     selectAll(){
         
-        // let users = User.getUsersStorage();
-        console.log("bora")
-        
+      
+        User.getUsersStorage('/users').then(data=>{
 
-        obj.users.forEach(dataUser=>{
-            let user = new User();
+            data.users.forEach(dataUser=>{
+                let user = new User();
+    
+                user.loadFromJSON(dataUser)
+                this.addLine(user);
+            })
 
-            user.loadFromJSON(dataUser)
-            this.addLine(user);
         })
+        
     }
 
 
 
     getTr(dataUser, tr = null){
-       
         if(!tr) tr = document.createElement("tr");
 
         tr.dataset.user = JSON.stringify(dataUser);
