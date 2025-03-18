@@ -109,7 +109,7 @@ class User {
 
     static getUsersStorage() {
 
-       return HttpRequest.get('users');
+       return Fetch.get('users');
     
     }
 
@@ -134,12 +134,12 @@ class User {
             
             if (this.id) {
             //toJSON() converte a json in stringfy json, I am using this method because some cases normal json becom Object[object]
-             promise = HttpRequest.put(`users/${this.id}`, this.toJSON())
+             promise = Fetch.put(`users/${this.id}`, this.toJSON())
              
 
             } else {
 
-            promise = HttpRequest.post(`users`, this.toJSON())
+            promise = Fetch.post(`users`, this.toJSON())
           
             }
           
@@ -160,6 +160,6 @@ class User {
 
 
     remove() {
-      return HttpRequest.delete(`users/${this.id}`)
+      return Fetch.delete(`users/${this.id}`)
     }
 }
